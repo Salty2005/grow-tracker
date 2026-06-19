@@ -19,7 +19,8 @@
     },
     "plugins": [
       "expo-router",
-      "./plugins/withScreenCapturePermission"
+      "./plugins/withScreenCapturePermission",
+      "expo-font"
     ],
     "extra": {
       "router": {
