@@ -17,16 +17,8 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
-    ],
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "ded42576-5cda-4d1f-ba2c-4db97f4d53e6"
-      }
-    },
-    "owner": "saltyshanks"
+      "expo-router",
+      "./plugins/withScreenCapturePermission"
+    ]
   }
 }
