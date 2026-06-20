@@ -14,7 +14,7 @@
     "android": {
       "package": "com.growtracker.app"
     },
-    "runtimeVersion": "1.0.5",
+    "runtimeVersion": { "policy": "appVersion" },
     "web": {
       "bundler": "metro"
     },
