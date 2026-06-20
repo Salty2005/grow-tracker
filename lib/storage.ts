@@ -106,9 +106,11 @@ export function generateId(): string {
 }
 
 export function calculateDaysSince(startDate: string): number {
-  const start = new Date(startDate);
+  const d = new Date(startDate);
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const now = new Date();
-  const diff = now.getTime() - start.getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = today.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
@@ -144,7 +146,8 @@ export function getStageProgress(
 }
 
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const d = new Date(dateString);
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',

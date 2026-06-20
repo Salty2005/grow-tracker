@@ -45,8 +45,8 @@ export default function PlantDetailScreen() {
   };
 
   const handleChangeStartDate = () => {
-    const currentDate = new Date(plant.startDate);
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const d = new Date(plant.startDate);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     setDateInput(dateStr);
     setShowDatePicker(true);
   };
@@ -69,7 +69,9 @@ export default function PlantDetailScreen() {
       return;
     }
 
-    await updatePlantStartDate(plant.id, date.toISOString());
+    const [year, month, day] = dateInput.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day, 12, 0, 0);
+    await updatePlantStartDate(plant.id, localDate.toISOString());
     setShowDatePicker(false);
     Alert.alert('Success', 'Planting date updated');
   };
