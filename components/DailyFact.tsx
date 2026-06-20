@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getRandomFact } from '../lib/facts';
 
 export default function DailyFact() {
   const [fact, setFact] = useState('');
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(20);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     setFact(getRandomFact());
