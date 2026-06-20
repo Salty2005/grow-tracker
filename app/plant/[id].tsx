@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Modal, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../store';
 import { GROWTH_STAGES, STAGE_COLORS, STAGE_GUIDES } from '../../constants';
+import { GrowthStage, LightSchedule, Plant } from '../../types';
 import { calculateDaysSince, formatDate } from '../../lib/storage';
 import StageBadge from '../../components/StageBadge';
 import CareLogEntry from '../../components/CareLogEntry';
@@ -14,6 +15,7 @@ export default function PlantDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const plants = useStore((s) => s.plants);
+  const updatePlant = useStore((s) => s.updatePlant);
   const updatePlantStage = useStore((s) => s.updatePlantStage);
   const updatePlantStartDate = useStore((s) => s.updatePlantStartDate);
   const deletePlant = useStore((s) => s.deletePlant);
@@ -25,6 +27,7 @@ export default function PlantDetailScreen() {
   const [activeTab, setActiveTab] = useState<'overview' | 'care' | 'environment' | 'growth'>('overview');
   const [showStagePicker, setShowStagePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [dateInput, setDateInput] = useState('');
 
   const plant = plants.find((p) => p.id === id);
@@ -80,7 +83,10 @@ export default function PlantDetailScreen() {
         <View style={styles.headerTop}>
           <View style={[styles.headerIcon, { backgroundColor: stageColor + '20' }]}><Ionicons name="leaf" size={28} color={stageColor} /></View>
           <View style={{ flex: 1 }}><Text style={styles.plantName}>{plant.name}</Text><Text style={styles.plantStrain}>{plant.strain}</Text></View>
-          <TouchableOpacity onPress={handleDelete}><Ionicons name="trash-outline" size={20} color="#ef4444" /></TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity onPress={() => setShowEditModal(true)}><Ionicons name="create-outline" size={20} color="#3b82f6" /></TouchableOpacity>
+            <TouchableOpacity onPress={handleDelete}><Ionicons name="trash-outline" size={20} color="#ef4444" /></TouchableOpacity>
+          </View>
         </View>
         <View style={styles.headerMeta}>
           <StageBadge stage={plant.stage} />
@@ -163,6 +169,7 @@ export default function PlantDetailScreen() {
               <View style={styles.statRow}><Text style={styles.statLabel}>Days Growing</Text><Text style={styles.statValue}>{days}</Text></View>
               <View style={styles.statRow}><Text style={styles.statLabel}>Type</Text><Text style={styles.statValue}>{plant.geneticType}</Text></View>
               <View style={styles.statRow}><Text style={styles.statLabel}>Gender</Text><Text style={styles.statValue}>{plant.gender}</Text></View>
+              <View style={styles.statRow}><Text style={styles.statLabel}>Medium</Text><Text style={styles.statValue}>{plant.medium}</Text></View>
             </View>
           </>
         )}
@@ -240,7 +247,134 @@ export default function PlantDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Edit Plant Modal */}
+      <EditPlantModal
+        visible={showEditModal}
+        plant={plant}
+        onClose={() => setShowEditModal(false)}
+        onSave={async (updates) => {
+          await updatePlant(plant.id, updates);
+          setShowEditModal(false);
+          Alert.alert('Success', 'Plant profile updated');
+        }}
+      />
     </ScrollView>
+  );
+}
+
+interface EditPlantModalProps {
+  visible: boolean;
+  plant: Plant;
+  onClose: () => void;
+  onSave: (updates: Partial<Plant>) => Promise<void>;
+}
+
+function EditPlantModal({ visible, plant, onClose, onSave }: EditPlantModalProps) {
+  const [name, setName] = useState(plant.name);
+  const [strain, setStrain] = useState(plant.strain);
+  const [gender, setGender] = useState(plant.gender);
+  const [stage, setStage] = useState<GrowthStage>(plant.stage);
+  const [lightSchedule, setLightSchedule] = useState<LightSchedule>(plant.lightSchedule);
+  const [medium, setMedium] = useState(plant.medium);
+  const [potSize, setPotSize] = useState(plant.potSize);
+  const [geneticType, setGeneticType] = useState(plant.geneticType);
+  const [notes, setNotes] = useState(plant.notes);
+
+  const handleSave = async () => {
+    if (!name.trim()) return Alert.alert('Error', 'Plant name is required');
+    if (!strain.trim()) return Alert.alert('Error', 'Strain name is required');
+    await onSave({
+      name: name.trim(),
+      strain: strain.trim(),
+      gender,
+      stage,
+      lightSchedule,
+      medium,
+      potSize,
+      geneticType,
+      notes: notes.trim(),
+    });
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <View style={styles.editModalHeader}>
+          <TouchableOpacity onPress={onClose} style={styles.editModalCancel}>
+            <Text style={styles.editModalCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.editModalTitle}>Edit Plant</Text>
+          <TouchableOpacity onPress={handleSave} style={styles.editModalSave}>
+            <Text style={styles.editModalSaveText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.editModalBody} contentContainerStyle={{ padding: 16 }}>
+          <Text style={styles.label}>Plant Name</Text>
+          <TextInput value={name} onChangeText={setName} placeholder="Plant name" placeholderTextColor="#6b7280" style={styles.input} />
+
+          <Text style={styles.label}>Strain</Text>
+          <TextInput value={strain} onChangeText={setStrain} placeholder="Strain name" placeholderTextColor="#6b7280" style={styles.input} />
+
+          <Text style={styles.label}>Genetic Type</Text>
+          <View style={styles.row}>
+            {(['photoperiod', 'autoflower'] as const).map((t) => (
+              <TouchableOpacity key={t} onPress={() => setGeneticType(t)} style={[styles.halfButton, geneticType === t && styles.activeGreen]}>
+                <Text style={[styles.halfButtonText, geneticType === t && styles.activeText]}>{t}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Gender</Text>
+          <View style={styles.row}>
+            {(['female', 'male', 'unknown'] as const).map((g) => (
+              <TouchableOpacity key={g} onPress={() => setGender(g)} style={[styles.halfButton, { marginRight: 8 }, gender === g && (g === 'female' ? styles.activePink : g === 'male' ? styles.activeBlue : styles.activeGray)]}>
+                <Text style={[styles.halfButtonText, gender === g && styles.activeText]}>{g}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Current Stage</Text>
+          <View style={styles.chipRow}>
+            {GROWTH_STAGES.filter((s) => s !== 'complete').map((s) => (
+              <TouchableOpacity key={s} onPress={() => setStage(s)} style={[styles.chip, stage === s && styles.activeGreen]}>
+                <Text style={[styles.chipText, stage === s && styles.activeText]}>{s.replace('-', ' ')}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Light Schedule</Text>
+          <View style={styles.chipRow}>
+            {(['18/6', '12/12', '20/4', '24/0', 'auto'] as const).map((s) => (
+              <TouchableOpacity key={s} onPress={() => setLightSchedule(s)} style={[styles.chip, lightSchedule === s && styles.activeGreen]}>
+                <Text style={[styles.chipText, lightSchedule === s && styles.activeText]}>{s}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Growing Medium</Text>
+          <View style={styles.chipRow}>
+            {['soil', 'coco', 'hydro', 'soil-less', 'rdwc', 'dwc'].map((m) => (
+              <TouchableOpacity key={m} onPress={() => setMedium(m)} style={[styles.chip, medium === m && styles.activeGreen]}>
+                <Text style={[styles.chipText, medium === m && styles.activeText]}>{m}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Pot Size</Text>
+          <View style={styles.chipRow}>
+            {['1 gallon', '3 gallon', '5 gallon', '7 gallon', '10 gallon', 'fabric pot'].map((s) => (
+              <TouchableOpacity key={s} onPress={() => setPotSize(s)} style={[styles.chip, potSize === s && styles.activeGreen]}>
+                <Text style={[styles.chipText, potSize === s && styles.activeText]}>{s}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.label}>Notes</Text>
+          <TextInput value={notes} onChangeText={setNotes} placeholder="Any additional notes..." placeholderTextColor="#6b7280" multiline numberOfLines={4} textAlignVertical="top" style={[styles.input, { minHeight: 100 }]} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
@@ -284,6 +418,9 @@ const styles = StyleSheet.create({
   chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#111827', marginRight: 8, marginBottom: 8 },
   chipText: { color: '#9ca3af', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   activeGreen: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  activePink: { backgroundColor: '#db2777', borderColor: '#db2777' },
+  activeBlue: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
+  activeGray: { backgroundColor: '#4b5563', borderColor: '#4b5563' },
   activeText: { color: '#fff' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { backgroundColor: '#1f2937', borderRadius: 16, padding: 24, width: '80%', borderWidth: 1, borderColor: '#374151' },
@@ -295,4 +432,17 @@ const styles = StyleSheet.create({
   modalCancelText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
   modalSave: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#22c55e' },
   modalSaveText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  editModalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#1f2937', backgroundColor: '#111827' },
+  editModalTitle: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  editModalCancel: { padding: 4 },
+  editModalCancelText: { color: '#9ca3af', fontSize: 14 },
+  editModalSave: { padding: 4 },
+  editModalSaveText: { color: '#22c55e', fontSize: 14, fontWeight: '600' },
+  editModalBody: { flex: 1, backgroundColor: '#0a0a0a' },
+  label: { color: '#fff', fontWeight: 'bold', fontSize: 14, marginBottom: 8, marginTop: 12 },
+  input: { backgroundColor: '#111827', color: '#fff', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#1f2937', fontSize: 14 },
+  row: { flexDirection: 'row', marginBottom: 4 },
+  halfButton: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#111827', marginRight: 8, alignItems: 'center' },
+  halfButtonText: { color: '#9ca3af', fontWeight: '600', fontSize: 13, textTransform: 'capitalize' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4 },
 });

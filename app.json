@@ -3,7 +3,7 @@
     "name": "Grow Tracker",
     "slug": "grow-tracker",
     "owner": "saltyshanks",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "grow-tracker",
@@ -14,7 +14,7 @@
     "android": {
       "package": "com.growtracker.app"
     },
-    "runtimeVersion": "1.0.3",
+    "runtimeVersion": "1.0.5",
     "web": {
       "bundler": "metro"
     },
