@@ -3,7 +3,7 @@
     "name": "Grow Tracker",
     "slug": "grow-tracker",
     "owner": "saltyshanks",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "grow-tracker",
@@ -17,10 +17,16 @@
     "web": {
       "bundler": "metro"
     },
+    "updates": {
+      "url": "https://u.expo.dev/ded42576-5cda-4d1f-ba2c-4db97f4d53e6",
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LAUNCH"
+    },
     "plugins": [
       "expo-router",
       "./plugins/withScreenCapturePermission",
-      "expo-font"
+      "expo-font",
+      "expo-system-ui"
     ],
     "extra": {
       "router": {
