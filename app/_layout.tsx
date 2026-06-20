@@ -2,10 +2,26 @@ import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useStore } from '../store';
+import { checkForOtaUpdate, fetchAndApplyUpdate } from '../lib/updates';
 
 export default function RootLayout() {
   const initialize = useStore((state) => state.initialize);
-  useEffect(() => { initialize(); }, []);
+
+  useEffect(() => {
+    initialize();
+
+    async function checkUpdate() {
+      try {
+        const updateAvailable = await checkForOtaUpdate();
+        if (updateAvailable) {
+          await fetchAndApplyUpdate();
+        }
+      } catch {
+        // silently fail - updates are non-critical
+      }
+    }
+    checkUpdate();
+  }, []);
 
   return (
     <>

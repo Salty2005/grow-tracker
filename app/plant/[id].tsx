@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Modal, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../store';
@@ -15,13 +15,17 @@ export default function PlantDetailScreen() {
   const router = useRouter();
   const plants = useStore((s) => s.plants);
   const updatePlantStage = useStore((s) => s.updatePlantStage);
+  const updatePlantStartDate = useStore((s) => s.updatePlantStartDate);
   const deletePlant = useStore((s) => s.deletePlant);
   const careLogs = useStore((s) => s.getPlantCareLogs(id || ''));
   const environmentReadings = useStore((s) => s.getPlantEnvironmentReadings(id || ''));
   const growthSnapshots = useStore((s) => s.getPlantGrowthSnapshots(id || ''));
+  const removePhotoFromSnapshot = useStore((s) => s.removePhotoFromSnapshot);
   const harvestData = useStore((s) => s.getPlantHarvestData(id || ''));
   const [activeTab, setActiveTab] = useState<'overview' | 'care' | 'environment' | 'growth'>('overview');
   const [showStagePicker, setShowStagePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateInput, setDateInput] = useState('');
 
   const plant = plants.find((p) => p.id === id);
   if (!plant) return <View style={styles.center}><Text style={{ color: '#6b7280' }}>Plant not found</Text></View>;
@@ -35,6 +39,36 @@ export default function PlantDetailScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: async () => { await deletePlant(plant.id); router.back(); } },
     ]);
+  };
+
+  const handleChangeStartDate = () => {
+    const currentDate = new Date(plant.startDate);
+    const dateStr = currentDate.toISOString().split('T')[0];
+    setDateInput(dateStr);
+    setShowDatePicker(true);
+  };
+
+  const handleSaveStartDate = async () => {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateInput)) {
+      Alert.alert('Error', 'Please enter date in YYYY-MM-DD format');
+      return;
+    }
+
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      Alert.alert('Error', 'Invalid date');
+      return;
+    }
+
+    if (date > new Date()) {
+      Alert.alert('Error', 'Planting date cannot be in the future');
+      return;
+    }
+
+    await updatePlantStartDate(plant.id, date.toISOString());
+    setShowDatePicker(false);
+    Alert.alert('Success', 'Planting date updated');
   };
 
   const tabs = [{ key: 'overview', label: 'Overview' }, { key: 'care', label: 'Care' }, { key: 'environment', label: 'Environment' }, { key: 'growth', label: 'Growth' }] as const;
@@ -117,7 +151,15 @@ export default function PlantDetailScreen() {
             {plant.notes && <View style={styles.card}><Text style={styles.cardTitle}>Notes</Text><Text style={styles.description}>{plant.notes}</Text></View>}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Quick Stats</Text>
-              <View style={styles.statRow}><Text style={styles.statLabel}>Started</Text><Text style={styles.statValue}>{formatDate(plant.startDate)}</Text></View>
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Started</Text>
+                <View style={styles.statWithValue}>
+                  <Text style={styles.statValue}>{formatDate(plant.startDate)}</Text>
+                  <TouchableOpacity onPress={handleChangeStartDate} style={styles.editDateButton}>
+                    <Ionicons name="pencil" size={12} color="#3b82f6" />
+                  </TouchableOpacity>
+                </View>
+              </View>
               <View style={styles.statRow}><Text style={styles.statLabel}>Days Growing</Text><Text style={styles.statValue}>{days}</Text></View>
               <View style={styles.statRow}><Text style={styles.statLabel}>Type</Text><Text style={styles.statValue}>{plant.geneticType}</Text></View>
               <View style={styles.statRow}><Text style={styles.statLabel}>Gender</Text><Text style={styles.statValue}>{plant.gender}</Text></View>
@@ -138,7 +180,13 @@ export default function PlantDetailScreen() {
           <>
             {growthSnapshots.length === 0
               ? <View style={styles.emptyState}><Ionicons name="trending-up-outline" size={48} color="#1f2937" /><Text style={styles.emptyText}>No growth snapshots yet</Text></View>
-              : growthSnapshots.map((s) => <GrowthSnapshotCard key={s.id} snapshot={s} />)
+              : growthSnapshots.map((s) => (
+                  <GrowthSnapshotCard 
+                    key={s.id} 
+                    snapshot={s} 
+                    onRemovePhoto={(photoId) => removePhotoFromSnapshot(s.id, photoId)}
+                  />
+                ))
             }
             {harvestData && (
               <View style={styles.card}>
@@ -154,6 +202,44 @@ export default function PlantDetailScreen() {
           </>
         )}
       </View>
+
+      {/* Date Picker Modal */}
+      <Modal
+        visible={showDatePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Change Planting Date</Text>
+            <Text style={styles.modalHint}>Enter date in YYYY-MM-DD format</Text>
+            <TextInput
+              value={dateInput}
+              onChangeText={setDateInput}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor="#6b7280"
+              style={styles.dateInput}
+              keyboardType="numbers-and-punctuation"
+              maxLength={10}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                onPress={() => setShowDatePicker(false)} 
+                style={styles.modalCancel}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleSaveStartDate} 
+                style={styles.modalSave}
+              >
+                <Text style={styles.modalSaveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -191,10 +277,22 @@ const styles = StyleSheet.create({
   statRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   statLabel: { color: '#6b7280', fontSize: 14 },
   statValue: { color: '#fff', fontSize: 14 },
+  statWithValue: { flexDirection: 'row', alignItems: 'center' },
+  editDateButton: { marginLeft: 8, padding: 4 },
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: '#6b7280', marginTop: 12 },
   chip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#111827', marginRight: 8, marginBottom: 8 },
   chipText: { color: '#9ca3af', fontSize: 12, fontWeight: '600', textTransform: 'capitalize' },
   activeGreen: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
   activeText: { color: '#fff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: '#1f2937', borderRadius: 16, padding: 24, width: '80%', borderWidth: 1, borderColor: '#374151' },
+  modalTitle: { color: '#fff', fontWeight: 'bold', fontSize: 18, marginBottom: 8 },
+  modalHint: { color: '#9ca3af', fontSize: 13, marginBottom: 16 },
+  dateInput: { backgroundColor: '#111827', color: '#fff', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#374151', fontSize: 16, marginBottom: 16 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  modalCancel: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#374151' },
+  modalCancelText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
+  modalSave: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#22c55e' },
+  modalSaveText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });

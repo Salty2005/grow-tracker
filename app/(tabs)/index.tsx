@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../store';
 import PlantCard from '../../components/PlantCard';
+import UpdateBanner from '../../components/UpdateBanner';
+import DailyFact from '../../components/DailyFact';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -22,6 +24,9 @@ export default function HomeScreen() {
         renderItem={() => null}
         ListHeaderComponent={
           <View style={styles.content}>
+            <UpdateBanner />
+            <DailyFact />
+
             {plants.length > 0 && (
               <View style={styles.statsBar}>
                 <View style={styles.statItem}><Text style={[styles.statValue, { color: '#4ade80' }]}>{activePlants.length}</Text><Text style={styles.statLabel}>Active</Text></View>

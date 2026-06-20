@@ -92,7 +92,8 @@ export default function StageDetailCard({ stage, showGuide = true, showEnvironme
                 </View>
               ))}
               <View style={styles.nutrientMeta}>
-                <Text style={styles.nutrientMetaText}>pH: {schedule.phRange}</Text>
+                <Text style={styles.nutrientMetaText}>Soil pH: {schedule.phRange}</Text>
+                <Text style={styles.nutrientMetaText}>Coco pH: {schedule.cocoPhRange}</Text>
                 <Text style={styles.nutrientMetaText}>EC: {schedule.ecRange}</Text>
                 <Text style={styles.nutrientMetaText}>PPM: {schedule.ppmRange}</Text>
               </View>

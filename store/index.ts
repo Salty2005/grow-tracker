@@ -37,6 +37,7 @@ interface AppState {
   updatePlant: (id: string, updates: Partial<Plant>) => Promise<void>;
   deletePlant: (id: string) => Promise<void>;
   updatePlantStage: (id: string, stage: GrowthStage) => Promise<void>;
+  updatePlantStartDate: (id: string, startDate: string) => Promise<void>;
 
   addCareLog: (log: Omit<CareLog, 'id' | 'createdAt'>) => Promise<void>;
   deleteCareLog: (id: string) => Promise<void>;
@@ -46,6 +47,7 @@ interface AppState {
 
   addGrowthSnapshot: (snapshot: Omit<GrowthSnapshot, 'id' | 'createdAt'>) => Promise<void>;
   deleteGrowthSnapshot: (id: string) => Promise<void>;
+  removePhotoFromSnapshot: (snapshotId: string, photoId: string) => Promise<void>;
 
   addHarvestData: (data: Omit<HarvestData, 'id' | 'createdAt'>) => Promise<void>;
   updateHarvestData: (id: string, updates: Partial<HarvestData>) => Promise<void>;
@@ -127,6 +129,14 @@ export const useStore = create<AppState>((set, get) => ({
     await savePlants(plants);
   },
 
+  updatePlantStartDate: async (id, startDate) => {
+    const plants = get().plants.map((p) =>
+      p.id === id ? { ...p, startDate, updatedAt: new Date().toISOString() } : p
+    );
+    set({ plants });
+    await savePlants(plants);
+  },
+
   addCareLog: async (logData) => {
     const log: CareLog = {
       ...logData,
@@ -174,6 +184,18 @@ export const useStore = create<AppState>((set, get) => ({
 
   deleteGrowthSnapshot: async (id) => {
     const growthSnapshots = get().growthSnapshots.filter((s) => s.id !== id);
+    set({ growthSnapshots });
+    await saveGrowthSnapshots(growthSnapshots);
+  },
+
+  removePhotoFromSnapshot: async (snapshotId, photoId) => {
+    const growthSnapshots = get().growthSnapshots.map((s) => {
+      if (s.id !== snapshotId) return s;
+      return {
+        ...s,
+        photos: s.photos.filter((p) => p.id !== photoId),
+      };
+    });
     set({ growthSnapshots });
     await saveGrowthSnapshots(growthSnapshots);
   },

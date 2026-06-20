@@ -94,6 +94,12 @@ export interface EnvironmentReading {
   createdAt: string;
 }
 
+export interface SnapshotPhoto {
+  id: string;
+  uri: string;
+  title: string;
+}
+
 export interface GrowthSnapshot {
   id: string;
   plantId: string;
@@ -105,6 +111,7 @@ export interface GrowthSnapshot {
   budDensity: 'airy' | 'medium' | 'dense' | null;
   trichomeStatus: 'clear' | 'cloudy' | 'amber' | 'mixed' | null;
   pistilStatus: 'white' | 'turning' | 'dark' | null;
+  photos: SnapshotPhoto[];
   notes: string;
   createdAt: string;
 }
@@ -131,6 +138,7 @@ export interface NutrientSchedule {
   week: number;
   nutrients: { type: NutrientType; amount: string; frequency: string }[];
   phRange: string;
+  cocoPhRange: string;
   ecRange: string;
   ppmRange: string;
   notes: string;

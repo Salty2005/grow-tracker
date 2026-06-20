@@ -55,7 +55,8 @@ export default function ScheduleScreen() {
                     </View>
                   ))}
                   <View style={styles.nutrientMeta}>
-                    <Text style={styles.metaText}>pH: {schedule.phRange}</Text>
+                    <Text style={styles.metaText}>Soil pH: {schedule.phRange}</Text>
+                    <Text style={styles.metaText}>Coco pH: {schedule.cocoPhRange}</Text>
                     <Text style={styles.metaText}>EC: {schedule.ecRange}</Text>
                     <Text style={styles.metaText}>PPM: {schedule.ppmRange}</Text>
                   </View>
