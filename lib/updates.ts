@@ -104,11 +104,17 @@ export async function checkGithubReleaseInfo(): Promise<UpdateInfo | null> {
 
 export async function checkForOtaUpdate(): Promise<boolean> {
   try {
-    if (__DEV__) return false;
+    console.log('[OTA] __DEV__:', __DEV__);
+    if (__DEV__) {
+      console.log('[OTA] Skipped: running in dev mode');
+      return false;
+    }
 
     const update = await Updates.checkForUpdateAsync();
+    console.log('[OTA] isAvailable:', update.isAvailable);
     return update.isAvailable;
-  } catch {
+  } catch (error) {
+    console.log('[OTA] checkForUpdateAsync error:', error);
     return false;
   }
 }
@@ -117,10 +123,15 @@ export async function fetchAndApplyUpdate(
   onStatusChange?: (status: UpdateStatus) => void
 ): Promise<boolean> {
   try {
-    if (__DEV__) return false;
+    console.log('[OTA] fetchAndApplyUpdate __DEV__:', __DEV__);
+    if (__DEV__) {
+      console.log('[OTA] Skipped: running in dev mode');
+      return false;
+    }
 
     onStatusChange?.('checking');
     const update = await Updates.checkForUpdateAsync();
+    console.log('[OTA] fetch check isAvailable:', update.isAvailable);
 
     if (!update.isAvailable) {
       onStatusChange?.('not-available');
@@ -129,9 +140,11 @@ export async function fetchAndApplyUpdate(
 
     onStatusChange?.('downloading');
     const downloadedUpdate = await Updates.fetchUpdateAsync();
+    console.log('[OTA] downloaded isNew:', downloadedUpdate.isNew);
 
     if (downloadedUpdate.isNew) {
       onStatusChange?.('restarting');
+      console.log('[OTA] Reloading app...');
       await Updates.reloadAsync();
       return true;
     }
@@ -139,7 +152,7 @@ export async function fetchAndApplyUpdate(
     onStatusChange?.('not-available');
     return false;
   } catch (error) {
-    console.error('OTA update failed:', error);
+    console.error('[OTA] fetchAndApplyUpdate error:', error);
     onStatusChange?.('error');
     return false;
   }
