@@ -14,17 +14,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
       - name: Publish OTA Update
-        run: eas update --platform android --branch production --message "Release ${{ github.event.release.tag_name }}"
+        run: npx eas-cli update --platform android --branch production --environment production --message "Release ${{ github.event.release.tag_name }}"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
