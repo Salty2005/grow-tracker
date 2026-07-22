@@ -1,36 +1,120 @@
 {
   "name": "grow-tracker",
-  "version": "1.0.0",
+  "version": "1.0.14",
   "main": "expo-router/entry",
+  "homepage": "./",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "export:web": "expo export --platform web",
+    "electron:dev": "electron .",
+    "build:win": "npm run export:web && electron-builder --win --publish never",
+    "build:win:publish": "npm run export:web && electron-builder --win --publish always",
+    "build:linux": "npm run export:web && electron-builder --linux --publish never",
+    "build:linux:publish": "npm run export:web && electron-builder --linux --publish always",
+    "build:mac": "npm run export:web && electron-builder --mac --publish never",
+    "build:mac:publish": "npm run export:web && electron-builder --mac --publish always"
+  },
+  "build": {
+    "appId": "com.growtracker.app",
+    "productName": "GrowTracker",
+    "artifactName": "GrowTracker-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "assets/icon.png"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Salty2005",
+      "repo": "grow-tracker"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "GrowTracker",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png",
+      "executableArgs": ["--no-sandbox"]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "assets/icon.png"
+    }
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.0.3",
-    "@react-native-async-storage/async-storage": "1.23.1",
-    "expo": "~51.0.0",
-    "expo-constants": "~16.0.2",
-    "expo-font": "~12.0.10",
-    "expo-image-picker": "~15.1.0",
-    "expo-linking": "~6.3.1",
-    "expo-router": "~3.5.24",
-    "expo-status-bar": "~1.12.1",
-    "expo-system-ui": "~3.0.7",
-    "expo-updates": "~0.25.28",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-native": "0.74.5",
-    "react-native-safe-area-context": "4.10.5",
-    "react-native-screens": "3.31.1",
+    "@expo/metro-runtime": "~56.0.15",
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "electron-updater": "^6.8.9",
+    "expo": "^56.0.12",
+    "expo-constants": "^56.0.18",
+    "expo-document-picker": "^57.0.1",
+    "expo-file-system": "^57.0.1",
+    "expo-font": "~56.0.7",
+    "expo-image-picker": "~56.0.18",
+    "expo-insights": "~56.0.18",
+    "expo-linking": "^56.0.14",
+    "expo-router": "^56.2.11",
+    "expo-sharing": "~56.0.22",
+    "expo-status-bar": "~56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-updates": "^56.0.19",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-web": "^0.21.2",
     "zustand": "^4.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@types/react": "~18.2.0",
-    "typescript": "~5.3.3"
+    "@types/react": "~19.2.14",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "typescript": "~6.0.3"
   },
-  "private": true
+  "private": true,
+  "author": {
+    "name": "SaltyShanks",
+    "email": "saltyshanks@users.noreply.github.com"
+  }
 }

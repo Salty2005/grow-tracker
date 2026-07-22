@@ -3,18 +3,22 @@
     "name": "Grow Tracker",
     "slug": "grow-tracker",
     "owner": "saltyshanks",
-    "version": "1.0.5",
+    "version": "1.0.14",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "grow-tracker",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.growtracker.app"
+      "bundleIdentifier": "com.growtracker.app",
+      "icon": "./assets/icon.png",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.growtracker.app"
     },
-    "runtimeVersion": "1.0.5",
+    "runtimeVersion": "1.0.14",
     "web": {
       "bundler": "metro"
     },
@@ -26,7 +30,8 @@
       "expo-router",
       "./plugins/withScreenCapturePermission",
       "expo-font",
-      "expo-system-ui"
+      "expo-system-ui",
+      "expo-sharing"
     ],
     "extra": {
       "router": {
